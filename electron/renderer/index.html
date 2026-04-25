@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Downloader UI</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Downloader (Localhost)</h1>
+      <div class="tabs">
+        <button id="tabBtnYoutube" class="tab active">YouTube</button>
+        <button id="tabBtnTiktok" class="tab">TikTok</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="tabYoutube" class="tabpage active">
+        <section class="panel">
+          <h2>YouTube</h2>
+          <div class="row">
+            <label>
+              Python command
+              <input id="pythonCmd" value="py" />
+            </label>
+            <label class="grow">
+              Channel/Playlist URL
+              <input id="channelUrl" placeholder="https://www.youtube.com/@NamaChannel/videos" />
+            </label>
+            <button id="btnLoad">Load</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Filter</h2>
+          <div class="grid">
+            <label class="grow">
+              Search judul
+              <input id="query" placeholder="mis. tutorial" />
+            </label>
+            <label>
+              Exclude Shorts (&lt; 60s)
+              <input id="excludeShorts" type="checkbox" checked />
+            </label>
+            <label>
+              Durasi min (detik / mm:ss)
+              <input id="minDuration" placeholder="60" />
+            </label>
+            <label>
+              Durasi max (detik / mm:ss)
+              <input id="maxDuration" placeholder="1800" />
+            </label>
+            <label>
+              Upload from (YYYY-MM-DD)
+              <input id="dateFrom" type="date" />
+            </label>
+            <label>
+              Upload to (YYYY-MM-DD)
+              <input id="dateTo" type="date" />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>List Video</h2>
+          <div class="row">
+            <button id="btnPrev">Prev</button>
+            <div id="pageInfo">Page 1</div>
+            <button id="btnNext">Next</button>
+            <div class="spacer"></div>
+            <button id="btnSelectAll">Select all</button>
+            <button id="btnSelectNone">Select none</button>
+          </div>
+          <div id="list" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Download</h2>
+          <div class="row">
+            <label class="grow">
+              Output folder
+              <input id="outputDir" value="downloads" />
+            </label>
+            <button id="btnBrowse">Browse...</button>
+            <label class="grow">
+              Custom label (opsional)
+              <input id="customLabel" placeholder="mis. PROJECTA" />
+            </label>
+            <label>
+              Parallel downloads
+              <input id="maxParallel" type="number" min="1" step="1" value="3" />
+            </label>
+            <label>
+              Audio only (mp3)
+              <input id="audioOnly" type="checkbox" />
+            </label>
+            <label>
+              Subtitles
+              <input id="subtitles" type="checkbox" />
+            </label>
+          </div>
+          <div class="row">
+            <button id="btnDownloadSelected" class="primary">Download selected</button>
+            <button id="btnPause">Pause</button>
+            <button id="btnContinue">Continue</button>
+            <button id="btnCancel" class="danger">Cancel</button>
+            <div id="status" class="status">idle</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <div>Overall</div>
+              <div id="overallText">0/0 (0 running, 0 queued)</div>
+            </div>
+            <progress id="overallProgress" value="0" max="100"></progress>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <div>Last progress</div>
+              <div id="currentText">-</div>
+            </div>
+            <progress id="itemProgress" value="0" max="100"></progress>
+          </div>
+          <textarea id="log" rows="10" readonly></textarea>
+        </section>
+
+        <section class="panel">
+          <h2>Downloads</h2>
+          <div class="row">
+            <button id="btnClearFinished">Clear finished</button>
+          </div>
+          <div id="downloads" class="downloads"></div>
+        </section>
+      </div>
+
+      <div id="tabTiktok" class="tabpage">
+        <section class="panel">
+          <h2>TikTok</h2>
+          <div class="row">
+            <label>
+              Python command
+              <input id="ttPythonCmd" value="py" />
+            </label>
+            <label class="grow">
+              Profile URL
+              <input id="ttProfileUrl" placeholder="https://www.tiktok.com/@username" />
+            </label>
+            <label class="grow">
+              Cookies (opsional, disarankan)
+              <input id="ttCookies" placeholder="path\\to\\cookies.txt" />
+            </label>
+            <button id="ttBtnPickCookies">Pick</button>
+            <button id="ttBtnLoad">Load</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Filter</h2>
+          <div class="grid">
+            <label class="grow">
+              Search (caption)
+              <input id="ttQuery" placeholder="mis. resep" />
+            </label>
+            <label>
+              Exclude &lt; 60s
+              <input id="ttExcludeShorts" type="checkbox" />
+            </label>
+            <label>
+              Durasi min (detik / mm:ss)
+              <input id="ttMinDuration" placeholder="0" />
+            </label>
+            <label>
+              Durasi max (detik / mm:ss)
+              <input id="ttMaxDuration" placeholder="60" />
+            </label>
+            <label>
+              Upload from
+              <input id="ttDateFrom" type="date" />
+            </label>
+            <label>
+              Upload to
+              <input id="ttDateTo" type="date" />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>List Video</h2>
+          <div class="row">
+            <button id="ttBtnPrev">Prev</button>
+            <div id="ttPageInfo">Page 1</div>
+            <button id="ttBtnNext">Next</button>
+            <div class="spacer"></div>
+            <button id="ttBtnSelectAll">Select all</button>
+            <button id="ttBtnSelectNone">Select none</button>
+          </div>
+          <div id="ttList" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Download</h2>
+          <div class="row">
+            <label class="grow">
+              Output folder
+              <input id="ttOutputDir" value="downloads" />
+            </label>
+            <button id="ttBtnBrowse">Browse...</button>
+            <label class="grow">
+              Custom label (opsional)
+              <input id="ttCustomLabel" placeholder="mis. TIKTOK" />
+            </label>
+            <label>
+              Parallel downloads
+              <input id="ttMaxParallel" type="number" min="1" step="1" value="3" />
+            </label>
+          </div>
+          <div class="row">
+            <button id="ttBtnDownloadSelected" class="primary">Download selected</button>
+            <button id="ttBtnPause">Pause</button>
+            <button id="ttBtnContinue">Continue</button>
+            <button id="ttBtnCancel" class="danger">Cancel</button>
+            <div id="ttStatus" class="status">idle</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <div>Overall</div>
+              <div id="ttOverallText">0/0 (0 running, 0 queued)</div>
+            </div>
+            <progress id="ttOverallProgress" value="0" max="100"></progress>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <div>Last progress</div>
+              <div id="ttCurrentText">-</div>
+            </div>
+            <progress id="ttItemProgress" value="0" max="100"></progress>
+          </div>
+          <textarea id="ttLog" rows="10" readonly></textarea>
+        </section>
+
+        <section class="panel">
+          <h2>Downloads</h2>
+          <div class="row">
+            <button id="ttBtnClearFinished">Clear finished</button>
+          </div>
+          <div id="ttDownloads" class="downloads"></div>
+        </section>
+      </div>
+    </main>
+
+    <script src="./renderer.js"></script>
+    <script src="./tabs.js"></script>
+    <script src="./tiktok.js"></script>
+  </body>
+</html>

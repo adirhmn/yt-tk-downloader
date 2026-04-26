@@ -43,6 +43,13 @@ def _detect_platform(url: str) -> str:
         return "youtube"
     return "other"
 
+def _platform_label(platform: str) -> str:
+    if platform == "youtube":
+        return "Youtube"
+    if platform == "tiktok":
+        return "Tiktok"
+    return platform.title() if platform else "Other"
+
 
 def _archive_urls_path(output_dir: Path, platform: str) -> Path:
     safe = platform if platform in ("youtube", "tiktok", "other") else "other"
@@ -636,12 +643,15 @@ def cmd_download(args: argparse.Namespace) -> int:
         sys.stdout.flush()
 
     succeeded: List[str] = []
+    excel_rows: List[List[Any]] = []
     code = 0
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         for u in todo:
             try:
-                rc = int(ydl.download([u]))
+                info = ydl.extract_info(u, download=True)
+                rc = 0
             except Exception as e:
+                info = None
                 rc = 1
                 code = 1
                 if json_mode:
@@ -649,15 +659,139 @@ def cmd_download(args: argparse.Namespace) -> int:
                     sys.stdout.flush()
             if rc == 0:
                 succeeded.append(u)
+                if isinstance(info, dict):
+                    title = info.get("title") if isinstance(info.get("title"), str) else ""
+                    publish_ddmmyyyy = _format_publish_date(info)
+                    src_url = info.get("webpage_url") if isinstance(info.get("webpage_url"), str) else u
+                    filename = ""
+                    for k in ("_filename", "filepath", "filename"):
+                        v = info.get(k)
+                        if isinstance(v, str) and v:
+                            filename = Path(v).name
+                            break
+                    excel_rows.append(
+                        [
+                            "4/26/2026",  # Tanggal Backup
+                            "Video",  # Jenis Media
+                            publish_ddmmyyyy,  # Tanggal Publish (DD/MM/YYYY)
+                            _platform_label(platform),  # Platform
+                            "Video",  # Kategori
+                            "1",  # Sub Kategori
+                            title,  # Judul Karya
+                            filename,  # Judul Dokumen (nama file)
+                            "",  # Tautan File Backup
+                            src_url,  # Tautan Sumber/Platform
+                            "⚠️ Parsial",  # Status Arsip
+                            "Manual",  # Metode Backup
+                            "",  # Kendala
+                            "",  # Catatan
+                        ]
+                    )
             else:
                 code = 1
 
     _append_archive_urls(archive_urls_file, succeeded)
 
+    # Also append to Excel log (per platform) for succeeded items.
+    try:
+        _append_excel_log_rows(output_dir=output_dir, platform=platform, rows=excel_rows)
+    except Exception as e:
+        if json_mode:
+            sys.stdout.write(_json_dumps({"type": "log", "message": f"Excel log skipped: {e}"}) + "\n")
+            sys.stdout.flush()
+
     if json_mode:
         sys.stdout.write(_json_dumps({"type": "end", "code": code}) + "\n")
         sys.stdout.flush()
     return code
+
+
+def _format_publish_date(vinfo: Dict[str, Any]) -> str:
+    iso = _iso_from_yyyymmdd(vinfo.get("upload_date")) or _iso_from_timestamp(vinfo.get("timestamp"))
+    if not iso:
+        return ""
+    try:
+        y, m, d = iso.split("-")
+        return f"{d}/{m}/{y}"
+    except Exception:
+        return ""
+
+
+def _excel_path(output_dir: Path, platform: str) -> Path:
+    safe = platform if platform in ("youtube", "tiktok", "other") else "other"
+    return output_dir / f"backup.{safe}.xlsx"
+
+
+def _excel_headers() -> List[str]:
+    return [
+        "Tanggal Backup",
+        "Jenis Media",
+        "Tanggal Publish",
+        "Platform",
+        "Kategori",
+        "Sub Kategori",
+        "Judul Karya",
+        "Judul Dokumen",
+        "Tautan File Backup",
+        "Tautan Sumber/Platform",
+        "Status Arsip",
+        "Metode Backup",
+        "Kendala",
+        "Catatan",
+    ]
+
+
+def _append_excel_log_rows(*, output_dir: Path, platform: str, rows: List[List[Any]]) -> None:
+    if not rows:
+        return
+    try:
+        from openpyxl import Workbook, load_workbook  # type: ignore
+    except Exception as e:
+        raise RuntimeError("openpyxl belum terpasang. Jalankan: py -m pip install -r requirements.txt") from e
+
+    xlsx = _excel_path(output_dir, platform)
+    lock_path = xlsx.with_suffix(xlsx.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with lock_path.open("a+", encoding="utf-8") as lockf:
+        if msvcrt is not None:
+            try:
+                msvcrt.locking(lockf.fileno(), msvcrt.LK_LOCK, 1)
+            except Exception:
+                pass
+        try:
+            if xlsx.exists():
+                wb = load_workbook(str(xlsx))
+                ws = wb.active
+            else:
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Backup"
+                ws.append(_excel_headers())
+
+            # Build existing URL set (Tautan Sumber/Platform column = 10)
+            existing_urls: Set[str] = set()
+            for r in ws.iter_rows(min_row=2, values_only=True):
+                if r and len(r) >= 10 and isinstance(r[9], str) and r[9].strip():
+                    existing_urls.add(r[9].strip())
+
+            for row in rows:
+                u = row[9]
+                if isinstance(u, str) and u.strip() in existing_urls:
+                    continue
+                ws.append(row)
+                if isinstance(u, str) and u.strip():
+                    existing_urls.add(u.strip())
+
+            tmp = xlsx.with_suffix(".tmp.xlsx")
+            wb.save(str(tmp))
+            tmp.replace(xlsx)
+        finally:
+            if msvcrt is not None:
+                try:
+                    msvcrt.locking(lockf.fileno(), msvcrt.LK_UNLCK, 1)
+                except Exception:
+                    pass
 
 
 def build_parser() -> argparse.ArgumentParser:

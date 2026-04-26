@@ -91,3 +91,6 @@ py .\main.py "https://www.youtube.com/@ChannelName/videos" --parallel 3
 - URL archives are split by platform:
   - `downloads/archive.youtube.urls.txt`
   - `downloads/archive.tiktok.urls.txt`
+- Excel log (created/updated after successful downloads):
+  - `downloads/backup.youtube.xlsx`
+  - `downloads/backup.tiktok.xlsx`

@@ -279,11 +279,26 @@ def _matches_filters(info: Dict[str, Any], filters: ListFilters) -> bool:
 
 
 def _build_common_ydl_opts() -> Dict[str, Any]:
+    class _SilentLogger:
+        def debug(self, msg: str) -> None:  # noqa: D401
+            return
+
+        def warning(self, msg: str) -> None:
+            return
+
+        def error(self, msg: str) -> None:
+            return
+
     return {
+        # Prevent user/global yt-dlp config (e.g. -f ...) from breaking list/download.
+        "ignoreconfig": True,
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
         "ignoreerrors": True,
+        # Some entries might not expose formats (or are restricted); don't spam stderr.
+        "ignore_no_formats_error": True,
+        "logger": _SilentLogger(),
         # Don't depend on yt-dlp cache dir behavior across environments.
         "cachedir": False,
     }
@@ -563,6 +578,7 @@ def cmd_download(args: argparse.Namespace) -> int:
     json_mode = bool(args.json_progress)
 
     ydl_opts: Dict[str, Any] = {
+        "ignoreconfig": True,
         "outtmpl": outtmpl,
         "paths": {"home": str(output_dir)},
         "ignoreerrors": False,
@@ -590,7 +606,12 @@ def cmd_download(args: argparse.Namespace) -> int:
         ]
     else:
         # Prefer MP4 + AAC/m4a for Windows player compatibility.
-        ydl_opts["format"] = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        # Some videos don't have m4a audio available; fall back to best audio that can be merged.
+        ydl_opts["format"] = (
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+            "bestvideo[ext=mp4]+bestaudio/"
+            "best[ext=mp4]/best"
+        )
         ydl_opts["merge_output_format"] = "mp4"
 
     if args.subtitles:

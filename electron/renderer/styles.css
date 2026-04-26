@@ -159,6 +159,14 @@ button:disabled {
   flex: 1;
 }
 
+.pagejump {
+  min-width: 140px;
+}
+
+.pagejump input {
+  width: 120px;
+}
+
 .list {
   margin-top: 10px;
   display: grid;

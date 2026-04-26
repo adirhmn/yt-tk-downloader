@@ -15,6 +15,8 @@
 
     btnPrev: document.getElementById("ttBtnPrev"),
     btnNext: document.getElementById("ttBtnNext"),
+    pageJump: document.getElementById("ttPageJump"),
+    btnGo: document.getElementById("ttBtnGo"),
     pageInfo: document.getElementById("ttPageInfo"),
     btnSelectAll: document.getElementById("ttBtnSelectAll"),
     btnSelectNone: document.getElementById("ttBtnSelectNone"),
@@ -321,6 +323,14 @@
   els.btnLoad?.addEventListener("click", () => loadPage(1));
   els.btnPrev?.addEventListener("click", () => loadPage(state.page - 1));
   els.btnNext?.addEventListener("click", () => loadPage(state.page + 1));
+  els.btnGo?.addEventListener("click", () => {
+    const n = Number(els.pageJump.value);
+    if (!Number.isFinite(n) || n < 1) return appendLog("Page number harus >= 1");
+    loadPage(Math.floor(n));
+  });
+  els.pageJump?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") els.btnGo.click();
+  });
 
   els.btnSelectAll?.addEventListener("click", () => {
     for (const item of state.items) state.selected.add(item.url);
@@ -467,4 +477,3 @@
     }
   });
 })();
-

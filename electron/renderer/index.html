@@ -32,6 +32,11 @@
               Channel/Playlist URL
               <input id="channelUrl" placeholder="https://www.youtube.com/@NamaChannel/videos" />
             </label>
+            <label class="grow">
+              Cookies (optional)
+              <input id="ytCookies" placeholder="path\\to\\cookies.txt" />
+            </label>
+            <button id="ytBtnPickCookies">Pick</button>
             <button id="btnLoad">Load</button>
           </div>
         </section>
@@ -72,6 +77,11 @@
             <button id="btnPrev">Prev</button>
             <div id="pageInfo">Page 1</div>
             <button id="btnNext">Next</button>
+            <label class="pagejump">
+              Go to page
+              <input id="pageJump" type="number" min="1" step="1" placeholder="1" />
+            </label>
+            <button id="btnGo">Go</button>
             <div class="spacer"></div>
             <button id="btnSelectAll">Select all</button>
             <button id="btnSelectNone">Select none</button>
@@ -194,6 +204,11 @@
             <button id="ttBtnPrev">Prev</button>
             <div id="ttPageInfo">Page 1</div>
             <button id="ttBtnNext">Next</button>
+            <label class="pagejump">
+              Go to page
+              <input id="ttPageJump" type="number" min="1" step="1" placeholder="1" />
+            </label>
+            <button id="ttBtnGo">Go</button>
             <div class="spacer"></div>
             <button id="ttBtnSelectAll">Select all</button>
             <button id="ttBtnSelectNone">Select none</button>

@@ -67,6 +67,8 @@ py .\yt_app.py list "<TIKTOK_PROFILE_URL>" --cookies "C:\\path\\cookies.txt"
 py .\yt_app.py download "<TIKTOK_VIDEO_URL>" --cookies "C:\\path\\cookies.txt"
 ```
 
+YouTube note: cookies can also help when YouTube shows “Sign in to confirm you’re not a bot”.
+
 Custom label (optional):
 
 ```powershell

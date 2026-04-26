@@ -33,7 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--format",
-        default="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        default=(
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+            "bestvideo[ext=mp4]+bestaudio/"
+            "best[ext=mp4]/best"
+        ),
         help="Format selector yt-dlp.",
     )
     parser.add_argument(

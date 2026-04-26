@@ -1,6 +1,8 @@
 const els = {
   pythonCmd: document.getElementById("pythonCmd"),
   channelUrl: document.getElementById("channelUrl"),
+  ytCookies: document.getElementById("ytCookies"),
+  ytBtnPickCookies: document.getElementById("ytBtnPickCookies"),
   btnLoad: document.getElementById("btnLoad"),
   query: document.getElementById("query"),
   excludeShorts: document.getElementById("excludeShorts"),
@@ -10,6 +12,8 @@ const els = {
   dateTo: document.getElementById("dateTo"),
   btnPrev: document.getElementById("btnPrev"),
   btnNext: document.getElementById("btnNext"),
+  pageJump: document.getElementById("pageJump"),
+  btnGo: document.getElementById("btnGo"),
   pageInfo: document.getElementById("pageInfo"),
   btnSelectAll: document.getElementById("btnSelectAll"),
   btnSelectNone: document.getElementById("btnSelectNone"),
@@ -268,6 +272,7 @@ async function loadPage(page) {
     maxDuration: normalizeDurationInput(els.maxDuration.value),
     dateFrom: els.dateFrom.value.trim() || null,
     dateTo: els.dateTo.value.trim() || null,
+    cookies: (els.ytCookies.value || "").trim() || null,
   };
 
   appendLog(`Loading page ${page}...`);
@@ -294,6 +299,7 @@ async function startDownload(urls) {
     subtitles: els.subtitles.checked,
     maxParallel: Number(els.maxParallel.value || 1),
     custom: (els.customLabel.value || "").trim() || null,
+    cookies: (els.ytCookies.value || "").trim() || null,
   };
   const res = await window.api.startDownload(params);
   if (!res.ok) {
@@ -310,6 +316,7 @@ async function addToDownload(urls) {
     subtitles: els.subtitles.checked,
     maxParallel: Number(els.maxParallel.value || 1),
     custom: (els.customLabel.value || "").trim() || null,
+    cookies: (els.ytCookies.value || "").trim() || null,
   };
   if (!state.sessionActive) {
     return await startDownload(urls);
@@ -318,9 +325,22 @@ async function addToDownload(urls) {
   if (!res.ok) appendLog(res.error || "Enqueue error");
 }
 
+els.ytBtnPickCookies.addEventListener("click", async () => {
+  const file = await window.api.selectCookiesFile();
+  if (file) els.ytCookies.value = file;
+});
+
 els.btnLoad.addEventListener("click", () => loadPage(1));
 els.btnPrev.addEventListener("click", () => loadPage(state.page - 1));
 els.btnNext.addEventListener("click", () => loadPage(state.page + 1));
+els.btnGo.addEventListener("click", () => {
+  const n = Number(els.pageJump.value);
+  if (!Number.isFinite(n) || n < 1) return appendLog("Page number harus >= 1");
+  loadPage(Math.floor(n));
+});
+els.pageJump.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") els.btnGo.click();
+});
 
 els.btnSelectAll.addEventListener("click", () => {
   for (const item of state.items) state.selected.add(item.url);
